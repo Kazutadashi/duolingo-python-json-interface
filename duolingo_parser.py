@@ -3,7 +3,25 @@ import pandas as pd
 import urllib.request
 import os
 
+
 def open_user_data(username):
+    """
+    Opens user data based on their username.
+
+    Opens up a request to http://www.duolingo.com/users/USERNAME
+    where the USERNAME is entered by the user.
+
+    Parameters
+    ----------
+    username : username
+       Case sensitve and symbol sensitive username used to request JSON file.
+
+    Returns
+    -------
+    dict
+       Returns the JSON file decoded as a python dictionary for data manipulation.
+
+    """
     try:
         print("Fetching JSON data from server...")
         with urllib.request.urlopen("http://www.duolingo.com/users/" + username) as url:
@@ -13,7 +31,6 @@ def open_user_data(username):
         print(exception)
 
     return user_data
-
 
 
 def create_word_dict(username):
@@ -97,8 +114,27 @@ def get_language_list(path):
 
     return language_list
 
+def get_all_number_of_lessons(list_of_languages, path):
 
+    language_lesson_dict = {}
 
+    for lang in list_of_languages:
+        language = lang
+        language_file = load_data(language, path)
+        language_lesson_dict[lang] = get_number_of_lessons(language_file)
+
+    return language_lesson_dict
+
+def get_all_number_of_skills(list_of_languages, path):
+
+    language_skills_dict = {}
+
+    for lang in list_of_languages:
+        language = lang
+        language_file = load_data(language, path)
+        language_skills_dict[lang] = get_number_of_skills(language_file)
+
+    return language_skills_dict
 
 def main():
 
@@ -107,6 +143,7 @@ def main():
     language = "French"
     language_file = load_data(language, path)
 
-    print((["French"], get_number_of_lessons(language_file)))
+    print(get_all_number_of_skills(get_language_list(path), path))
+    print(open_user_data())
 
 main()
