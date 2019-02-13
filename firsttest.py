@@ -1,23 +1,19 @@
 import json
 import pandas as pd
 import urllib.request
+import os
 
+def open_user_data(username):
+    try:
+        print("Fetching JSON data from server...")
+        with urllib.request.urlopen("http://www.duolingo.com/users/" + username) as url:
+            user_data = json.loads(url.read().decode())
 
-def open_user_data(username, offline=False):
-    if offline == False:
-        try:
-            print("Fetching JSON data from server...")
-            with urllib.request.urlopen("http://www.duolingo.com/users/" + username) as url:
-                user_data = json.loads(url.read().decode())
+    except Exception as exception:
+        print(exception)
 
-        except Exception as exception:
-            print(exception)
+    return user_data
 
-        return user_data
-    else:
-        with open("/home/owen/Documents/Computer Science/Duolingo CS/Kazutadashi.json") as offline_file:
-            testing_file = json.load(offline_file)
-            return testing_file
 
 
 def create_word_dict(username):
@@ -56,9 +52,61 @@ def create_words_csv(dictionary):
     except Exception as exception:
         print(exception)
 
+
+def get_language_code(json_file):
+    return list(json_file['language_data'].keys())[0]
+
+
+def get_language_name(json_file):
+    return json_file['language_data'][get_language_code(json_file)]['language_string']
+
+
+def get_number_of_skills(json_file):
+    return len(json_file['language_data'][get_language_code(json_file)]['skills'])
+
+
+def get_number_of_lessons(json_file):
+    total_lessons = 0
+
+    for i in range(0, get_number_of_skills(json_file)):
+        total_lessons += json_file['language_data'][get_language_code(json_file)]['skills'][i]['num_lessons']
+
+    return total_lessons
+
+
+def get_number_of_lexemes(json_file):
+    total_lexemes = 0
+
+    for i in range(0, get_number_of_skills(json_file)):
+        total_lexemes += json_file['language_data'][get_language_code(json_file)]['skills'][i]['num_lexemes']
+
+    return total_lexemes
+
+
+def load_data(language, path):
+    with open(path + language + ".json") as offline_file:
+        current_file = json.load(offline_file)
+        return current_file
+
+
+def get_language_list(path):
+    language_list = []
+
+    for language in os.listdir(path):
+        language_list.append(language[0:len(language)-5])
+
+    return language_list
+
+
+
+
 def main():
 
-    username = input("Please enter the username you would like to retrieve data from: ")
-    create_words_csv(create_word_dict(username))
+    path = "/home/owen/Documents/Computer Science/Duolingo CS/All Language Json Files/"
+
+    language = "French"
+    language_file = load_data(language, path)
+
+    print((["French"], get_number_of_lessons(language_file)))
 
 main()
