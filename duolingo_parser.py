@@ -4,7 +4,7 @@ import urllib.request
 import os
 
 
-def open_user_data(username):
+def open_user_data_from_web(username, offline=False):
     """
     Opens user data based on their username.
 
@@ -33,7 +33,7 @@ def open_user_data(username):
     return user_data
 
 
-def create_word_dict(username):
+def create_word_dict(online=True, path=None, username=None):
     """
     Creates a dictionary of words.
 
@@ -42,8 +42,8 @@ def create_word_dict(username):
 
     Parameters
     ----------
-    username
-        Case sensitve and symbol sensitive username used to request JSON file.
+    online
+        Used to determine if we are going to load a file, or download one from the internet
 
     Returns
     -------
@@ -51,7 +51,12 @@ def create_word_dict(username):
         A dictionary with lesson titles as keys and words as values
 
     """
-    profile_data = open_user_data(username)
+    if online == True:
+        profile_data = open_user_data_from_web(username)
+
+    else:
+        profile_data_raw = open(path).read()
+        profile_data = json.loads(profile_data_raw)
 
     # Gathers the language code to move through the dictionary based off the username
     language = list(profile_data['language_data'].keys())[0]
@@ -261,14 +266,12 @@ def get_language_list(path):
 
     return language_list
 
-def get_all_number_of_lessons(list_of_languages, path):
+def make_dict_all_lessons(list_of_languages, path):
     """
-    Gets the number of lessons for all possible trees
+    Makes a dictionary of all lessons
 
-    Gets the number of lessons for all possible tree data that the user has access to locally.
-    These local files should be the JSON files downloaded from the site.
-    This will not work for online requests because only the current language tree is used
-    and does not show other tree data.
+    Makes a dictionary for every language, showing the language as the key,
+    and the number of lessons for that language as the value
 
     Parameters
     ----------
@@ -280,8 +283,9 @@ def get_all_number_of_lessons(list_of_languages, path):
 
     Returns
     -------
-    int
-        The total number of lessons from all trees
+    language_lesson_dict
+        The dictionary of languages to lessons
+
 
     """
     language_lesson_dict = {}
@@ -296,14 +300,12 @@ def get_all_number_of_lessons(list_of_languages, path):
 
     return language_lesson_dict
 
-def get_all_number_of_skills(list_of_languages, path):
+def make_dict_all_skills(list_of_languages, path):
     """
-    Gets the number of skills for all possible trees
+    Makes a dictionary of all skills
 
-    Gets the number of skills for all possible tree data that the user has access to locally.
-    These local files should be the JSON files downloaded from the site.
-    This will not work for online requests because only the current language tree is used
-    and does not show other tree data.
+    Makes a dictionary for every language, showing the language as the key,
+    and the number of skills for that language as the value
 
     Parameters
     ----------
@@ -315,8 +317,8 @@ def get_all_number_of_skills(list_of_languages, path):
 
     Returns
     -------
-    int
-        The total number of skills from all trees
+    language_skills_dict
+        The dictionary of languages to skills
 
 
     """
@@ -333,9 +335,44 @@ def get_all_number_of_skills(list_of_languages, path):
     return language_skills_dict
 
 
-def main():
+def get_word_count_dict(path):
+    """
+    Makes a dictionary of the number of words in each tree
 
-    return
+    Makes a dictionary of the number of words in each tree. It uses the language name
+    as the key, and the number of words in each language as the value
+
+    Parameters
+    ----------
+    path
+        The path to the local language JSON files. This is used to loop through
+        all json files in a directory, to generate a key and value for each
+
+    Returns
+    -------
+    languages_and_word_count
+        The dictionary of all languages and their word count
 
 
-main()
+    """
+
+    languages_and_word_count = {}
+    languages = get_language_list(path)
+
+    # For each language, create a key with the title and then loops over each json file to
+    # extract the number of words per tree
+
+    for i in range(0, len(languages)):
+        language = languages[i]
+        word_dict = create_word_dict(online=False, path=path + language + ".json")
+
+        sum = 0
+        for values in word_dict.values():
+            sum += len(values)
+
+        languages_and_word_count[language] = sum
+
+    return languages_and_word_count
+
+
+
